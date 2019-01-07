@@ -1,6 +1,7 @@
 module github.com/highstead/bin-log-poc
 
 require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/Shopify/reportify-streams v0.0.0-20181211164110-72160ac42060 // indirect
 	github.com/Shopify/sarama v1.18.0
 	github.com/juju/errors v0.0.0-20181118221551-089d3ea4e4d5 // indirect
