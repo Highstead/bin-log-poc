@@ -77,4 +77,4 @@ RUN ln -s usr/local/bin/docker-entrypoint.sh /entrypoint.sh # backwards compat
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 3306 33060
-CMD ["mysqld"]
+CMD ["mysqld", "--log-bin=/var/lib/mysql/mysql-bin.log", "--server-id=1"]
