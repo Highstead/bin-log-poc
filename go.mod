@@ -10,6 +10,6 @@ require (
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 // indirect
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/siddontang/go-log v0.0.0-20180807004314-8d05993dda07 // indirect
-	github.com/siddontang/go-mysql v0.0.0-20181213024324-319e088eeeb0
+	github.com/siddontang/go-mysql v0.0.0-20190110070134-86783dcce71b
 	github.com/sirupsen/logrus v1.2.0
 )
