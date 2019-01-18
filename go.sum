@@ -14,6 +14,8 @@ contrib.go.opencensus.io/exporter/stackdriver v0.7.0/go.mod h1:hNe5qQofPbg6bLQY5
 contrib.go.opencensus.io/exporter/stackdriver v0.8.0/go.mod h1:hNe5qQofPbg6bLQY5wHCvQ7o+2E5P8PkegEuQ+MyRw0=
 git.apache.org/thrift.git v0.0.0-20180902110319-2566ecd5d999/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 git.apache.org/thrift.git v0.0.0-20181106172052-f7d43ce0aa58/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
+github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
+github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DataDog/datadog-go v0.0.0-20180330214955-e67964b4021a/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/datadog-go v0.0.0-20180822151419-281ae9f2d895 h1:dmc/C8bpE5VkQn65PNbbyACDC8xw8Hpp/NEurdPmQDQ=
 github.com/DataDog/datadog-go v0.0.0-20180822151419-281ae9f2d895/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
@@ -163,6 +165,8 @@ github.com/openzipkin/zipkin-go v0.1.1/go.mod h1:NtoC/o8u3JlF1lSlyPNswIbeQH9bJTm
 github.com/openzipkin/zipkin-go v0.1.3/go.mod h1:NtoC/o8u3JlF1lSlyPNswIbeQH9bJTmOf0Erfk+hxe8=
 github.com/pierrec/lz4 v0.0.0-20180906185208-bb6bfd13c6a2 h1:S4MUQ7zZCj5JPfz2hh2NvdBK6WwJ86juB/+vd7QePts=
 github.com/pierrec/lz4 v0.0.0-20180906185208-bb6bfd13c6a2/go.mod h1:3/3N9NVKO0jef7pBehbT1qWhCMrIgbYNnFAZCqQ5LRc=
+github.com/pingcap/errors v0.11.0 h1:DCJQB8jrHbQ1VVlMFIrbj2ApScNNotVmkSNplu2yUt4=
+github.com/pingcap/errors v0.11.0/go.mod h1:Oi8TUi2kEtXXLMJk9l1cGmz20kV3TaQ0usTwv5KuLY8=
 github.com/pkg/errors v0.8.0 h1:WdK/asTD0HN+q6hsWO3/vpuAkAr+tw6aNJNDFFf0+qw=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
@@ -191,6 +195,11 @@ github.com/siddontang/go-log v0.0.0-20180807004314-8d05993dda07 h1:oI+RNwuC9jF2g
 github.com/siddontang/go-log v0.0.0-20180807004314-8d05993dda07/go.mod h1:yFdBgwXP24JziuRl2NMUahT7nGLNOKi1SIiFxMttVD4=
 github.com/siddontang/go-mysql v0.0.0-20181213024324-319e088eeeb0 h1:wUw3JSIPvewWgSfzRXmqULaAd2MuNTyHQ/Np9KevJgg=
 github.com/siddontang/go-mysql v0.0.0-20181213024324-319e088eeeb0/go.mod h1:wzjXB9ICbSvAycqKa006qypXiHt48N2SJMblRU9sCrg=
+github.com/siddontang/go-mysql v0.0.0-20190103003530-f6331bc425f7 h1:emCUX8nYw3pZ828jB7ph6bJE8+yKHIrtRFWg+iDPNyE=
+github.com/siddontang/go-mysql v0.0.0-20190110070134-86783dcce71b h1:R6CfYWLk7UTtvt68XytC30SBKeKP1ByWhimYvEmhCZw=
+github.com/siddontang/go-mysql v0.0.0-20190110070134-86783dcce71b/go.mod h1:wzjXB9ICbSvAycqKa006qypXiHt48N2SJMblRU9sCrg=
+github.com/siddontang/go-mysql v0.0.0-20190118051307-00086da2c732 h1:zpXECI/Tl4JEfVxZ5Hv34Io3pDq+mkYCGF4V9tfMrZ0=
+github.com/siddontang/go-mysql v0.0.0-20190118051307-00086da2c732/go.mod h1:wzjXB9ICbSvAycqKa006qypXiHt48N2SJMblRU9sCrg=
 github.com/sirupsen/logrus v1.0.6/go.mod h1:pMByvHTf9Beacp5x1UXfOR9xyW/9antXMhjMPG0dEzc=
 github.com/sirupsen/logrus v1.1.0/go.mod h1:zrgwTnHtNr00buQ1vSptGe8m1f/BbgsPukg8qsT7A+A=
 github.com/sirupsen/logrus v1.2.0 h1:juTguoYk5qI21pwyTXY3B3Y5cOTH3ZUyZCg1v/mihuo=

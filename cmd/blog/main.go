@@ -2,10 +2,13 @@ package main
 
 import (
 	"flag"
-	"net/http"
 	_ "net/http/pprof"
-	"runtime"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
 
+	"github.com/Shopify/reportify-query/common"
 	"github.com/highstead/bin-log-poc"
 	log "github.com/sirupsen/logrus"
 )
@@ -17,20 +20,38 @@ func main() {
 	// Parse flags.
 	var (
 		configdir = flag.String("c", "config", "config directory path")
+		debug     = flag.String("d", "true", "debug mode")
 	)
 	flag.Parse()
-
-	log.SetLevel(log.DebugLevel)
+	if strings.ToLower(*debug) == "true" {
+		log.SetLevel(log.DebugLevel)
+		log.SetOutput(os.Stdout)
+		log.SetFormatter(common.LogFormatter{Formatter: new(log.TextFormatter)})
+		log.Println("Logging in debug mode")
+	} else {
+		log.SetLevel(log.InfoLevel)
+		log.SetFormatter(common.LogFormatter{Formatter: new(log.JSONFormatter)})
+	}
 
 	secrets, err := binlog.ParseSecretsFile(*configdir)
 	if err != nil {
 		log.WithError(err).Panic("can't parse secrets file")
 	}
 
-	syncer := secrets.getSyncer()
+	gracefulShutdown(secrets)
+}
 
-	// Start an HTTP server so we can profile it with pprof.
-	// See golang.org/pkd/net/http/pprof
-	runtime.SetBlockProfileRate(1000) // 1 sample per 1000ns
-	http.ListenAndServe(":8080", nil)
+func gracefulShutdown(secrets *binlog.Secrets) {
+	ctx := secrets.Master.OpenCanal()
+	log.Info("Canal Open")
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case <-stop:
+		log.Info("Recieved stop signal")
+	case <-ctx.Done():
+		log.WithField("ctx", ctx.Err()).Info("Context closed")
+	}
 }

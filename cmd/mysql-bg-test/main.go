@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -20,6 +21,10 @@ import (
 type Sale struct {
 	value           int64
 	discountPercent int64
+}
+
+func (s *Sale) String() string {
+	return fmt.Sprintf("Sale value: %d, discount: %d", s.value, s.discountPercent)
 }
 
 func main() {
@@ -76,6 +81,8 @@ func gracefulShutdown(secrets *binlog.Secrets) {
 				err := inserter(ctx, conn, s)
 				if err != nil {
 					log.WithError(err).Println("unable to insert record")
+				} else {
+					log.Debug(s)
 				}
 			}
 		}

@@ -1,29 +1,34 @@
-zookeeper:
-  image: mesoscloud/zookeeper:latest
-  container_name: blog_zook 
-  ports:
-    - "2181:2181"
+version: '2'
 
-kafka:
-  image: wurstmeister/kafka:0.9.0.1
-  container_name: blog_kafka
-  ports:
-    - "9092:9092"
-  links:
-    - zookeeper:zookeeper
-  environment:
-    KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
-    KAFKA_ADVERTISED_PORT: 9092
-    KAFKA_CREATE_TOPICS: "reportify.storefront.pageviews:8:1,reportify.storefront.checkouts:8:1,test_source:8:1,test_sink:8:1"
-    KAFKA_DELETE_TOPIC_ENABLE: "true"
-    KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+services: 
+  zookeeper:
+    image: mesoscloud/zookeeper:latest
+    container_name: blog_zook 
+    ports:
+      - "2181:2181"
 
-mysql:
-  image: mysql:5.7
-  container_name: blog_mysql
-  environment:
-    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-  volumes:
-    - /var/lib/mysql
-  ports:
-    - "3306:3306"
+  kafka:
+    image: wurstmeister/kafka:0.9.0.1
+    container_name: blog_kafka
+    ports:
+      - "9092:9092"
+    links:
+      - zookeeper:zookeeper
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_CREATE_TOPICS: "reportify.storefront.pageviews:8:1,reportify.storefront.checkouts:8:1,test_source:8:1,test_sink:8:1"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    container_name: blog_mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - /var/lib/mysql
+    ports:
+      - "3306:3306"
