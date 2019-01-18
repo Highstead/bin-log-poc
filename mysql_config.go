@@ -30,6 +30,10 @@ type MysqlConfig struct {
 	tlsConfig string
 }
 
+func (m *MysqlConfig) String() string {
+	return fmt.Sprintf("cannot connect to %s at %s", m.DB, m.Host)
+}
+
 func (m *MysqlConfig) Connect() (*sql.DB, error) {
 	db, err := sql.Open("mysql", m.DataSourceString())
 	if err != nil {
@@ -106,6 +110,7 @@ func (m *MysqlConfig) OpenCanal() context.Context {
 
 	cfg.Dump.TableDB = "sales"
 	cfg.Dump.Tables = []string{"sales"}
+	cfg.Dump.Protocol = "tcp"
 
 	c, err := canal.NewCanal(cfg)
 	if err != nil {
