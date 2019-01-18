@@ -18,15 +18,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Sale struct {
-	value           int64
-	discountPercent int64
-}
-
-func (s *Sale) String() string {
-	return fmt.Sprintf("Sale value: %d, discount: %d", s.value, s.discountPercent)
-}
-
 func main() {
 	log.SetFormatter(new(log.JSONFormatter))
 	log.Info("starting mysql-background-inserter")
@@ -51,10 +42,30 @@ func main() {
 		log.WithError(err).Panic("unable to parse secrets file")
 	}
 
-	gracefulShutdown(secrets)
+	cancel := simpleProgram(secrets)
+	gracefulShutdown(cancel)
+
 }
 
-func gracefulShutdown(secrets *binlog.Secrets) {
+func gracefulShutdown(cancel context.CancelFunc) {
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	<-stop
+	log.Info("mysql-inserter is shutting down")
+	cancel()
+}
+
+type Sale struct {
+	value           int64
+	discountPercent int64
+}
+
+func (s *Sale) String() string {
+	return fmt.Sprintf("Sale value: %d, discount: %d", s.value, s.discountPercent)
+}
+
+func simpleProgram(secrets *binlog.Secrets) context.CancelFunc {
 	conn, err := secrets.Master.Connect()
 	if err != nil {
 		log.WithError(err).Panic("Unable to connect to mysql database")
@@ -73,11 +84,21 @@ func gracefulShutdown(secrets *binlog.Secrets) {
 				log.Info("context done")
 				return
 			case <-time.After(dur):
-				s := &Sale{
+				salesChannel <- &Sale{
 					value:           r.Int63n(10000),
 					discountPercent: r.Int63n(3000),
 				}
-				salesChannel <- s
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info("context done")
+				return
+			case s := <-salesChannel:
 				err := inserter(ctx, conn, s)
 				if err != nil {
 					log.WithError(err).Println("unable to insert record")
@@ -88,12 +109,8 @@ func gracefulShutdown(secrets *binlog.Secrets) {
 		}
 	}()
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	return cancel
 
-	<-stop
-	log.Info("mysql-inserter is shutting down")
-	cancel()
 }
 
 func inserter(ctx context.Context, conn *sql.DB, s *Sale) error {
