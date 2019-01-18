@@ -116,6 +116,7 @@ func (m *MysqlConfig) OpenCanal() context.Context {
 	if err != nil {
 		log.WithError(err).Panic(err, "Unable to start canal")
 	}
+	c.SetEventHandler(&loggerBlogEventHandler{})
 	c.Run()
 	return c.Ctx()
 }

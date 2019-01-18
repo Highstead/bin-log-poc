@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	_ "net/http/pprof"
 	"os"
@@ -37,13 +38,13 @@ func main() {
 	if err != nil {
 		log.WithError(err).Panic("can't parse secrets file")
 	}
-
-	gracefulShutdown(secrets)
-}
-
-func gracefulShutdown(secrets *binlog.Secrets) {
 	ctx := secrets.Master.OpenCanal()
 	log.Info("Canal Open")
+
+	gracefulShutdown(ctx)
+}
+
+func gracefulShutdown(ctx context.Context) {
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
