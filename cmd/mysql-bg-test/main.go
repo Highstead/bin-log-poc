@@ -66,16 +66,19 @@ func (s *Sale) String() string {
 }
 
 func simpleProgram(secrets *binlog.Secrets) context.CancelFunc {
+	secrets.Master.MultiStatement = true
 	conn, err := secrets.Master.Connect()
 	if err != nil {
 		log.WithError(err).Panic("Unable to connect to mysql database")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	salesChannel := make(chan *Sale, 10)
+	insertChannel := make(chan *Sale, 10)
+	transChannel := make(chan *Sale, 10)
+	delChannel := make(chan bool, 10)
 
 	r := rand.New(rand.NewSource(44))
-	log.Info("Beginning inserting data")
+
 	go func() {
 		for {
 			dur := time.Duration(r.Int31n(2000)) * time.Millisecond
@@ -84,10 +87,39 @@ func simpleProgram(secrets *binlog.Secrets) context.CancelFunc {
 				log.Info("context done")
 				return
 			case <-time.After(dur):
-				salesChannel <- &Sale{
+				insertChannel <- &Sale{
 					value:           r.Int63n(10000),
 					discountPercent: r.Int63n(3000),
 				}
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			dur := time.Duration(r.Int31n(2000)) * time.Millisecond
+			select {
+			case <-ctx.Done():
+				log.Info("context done")
+				return
+			case <-time.After(dur):
+				transChannel <- &Sale{
+					value:           r.Int63n(10000),
+					discountPercent: r.Int63n(3000),
+				}
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			dur := time.Duration(r.Int31n(2000)) * time.Millisecond
+			select {
+			case <-ctx.Done():
+				log.Info("context done")
+				return
+			case <-time.After(dur):
+				delChannel <- true
 			}
 		}
 	}()
@@ -98,12 +130,26 @@ func simpleProgram(secrets *binlog.Secrets) context.CancelFunc {
 			case <-ctx.Done():
 				log.Info("context done")
 				return
-			case s := <-salesChannel:
+			case s := <-insertChannel:
 				err := inserter(ctx, conn, s)
 				if err != nil {
-					log.WithError(err).Println("unable to insert record")
+					log.WithField("type", "insert").WithError(err).Println("unable to insert record")
 				} else {
-					log.Debug(s)
+					log.WithField("type", "insert").Debug(s)
+				}
+			case s := <-transChannel:
+				err := transInsert(ctx, conn, s)
+				if err != nil {
+					log.WithField("type", "trans").WithError(err).Println("unable to trans-insert record")
+				} else {
+					log.WithField("type", "trans").Debug(s)
+				}
+			case <-delChannel:
+				err := deleter(ctx, conn)
+				if err != nil {
+					log.WithField("type", "del").WithError(err).Println("unable to delete record")
+				} else {
+					log.WithField("type", "del").Debug("delete")
 				}
 			}
 		}
@@ -117,5 +163,26 @@ func inserter(ctx context.Context, conn *sql.DB, s *Sale) error {
 	query := "INSERT INTO sales.sales(happened_at, currency, created_at, amount_displayed, discount_percent) VALUES(NOW(), 'CAD', NOW(), ?, ?);"
 	_, err := conn.ExecContext(ctx, query, s.value/100, s.discountPercent/100)
 	return err
+}
 
+func transInsert(ctx context.Context, conn *sql.DB, s *Sale) error {
+	query := `
+		START TRANSACTION;
+		SET @saleNum = (SELECT MAX(id)+1 FROM sales.sales);
+		INSERT INTO sales.sales(id, happened_at, currency, created_at, amount_displayed, discount_percent) VALUES(@saleNum, NOW(), 'CAD', NOW(), ?, ?);
+		COMMIT;
+	`
+	_, err := conn.ExecContext(ctx, query, s.value/100, s.discountPercent/100)
+	return err
+}
+
+func deleter(ctx context.Context, conn *sql.DB) error {
+	query := `
+		START TRANSACTION;
+		SET @delNum = (SELECT MAX(id) FROM sales.sales);
+		DELETE FROM sales.sales WHERE id = @delNum;
+		COMMIT;
+	`
+	_, err := conn.ExecContext(ctx, query)
+	return err
 }

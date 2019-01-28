@@ -26,6 +26,7 @@ type MysqlConfig struct {
 	Proxy          bool              `json:"_proxy,omitempty"`
 	SSL            string            `json:"_sslca,omitempty"`
 	User           string            `json:"_username,omitempty"`
+	MultiStatement bool              `json:"_multistatement,omitempty"`
 
 	tlsConfig string
 }
@@ -36,6 +37,7 @@ func (m *MysqlConfig) String() string {
 
 func (m *MysqlConfig) Connect() (*sql.DB, error) {
 	db, err := sql.Open("mysql", m.DataSourceString())
+	fmt.Println(m.DataSourceString())
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect to db (%s)", m)
 	} else if err := db.Ping(); err != nil {
@@ -78,6 +80,9 @@ func (m *MysqlConfig) EncodeFlags() string {
 	values.Set("readTimeout", "1m")
 	values.Set("sql_mode", "'ONLY_FULL_GROUP_BY,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'")
 	values.Set("tx_isolation", "'READ-COMMITTED'")
+	if m.MultiStatement {
+		values.Set("multiStatements", fmt.Sprintf("%t", m.MultiStatement))
+	}
 
 	if m.tlsConfig != "" {
 		values.Set("tls", m.tlsConfig)
