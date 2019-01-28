@@ -75,6 +75,7 @@ func simpleProgram(secrets *binlog.Secrets) context.CancelFunc {
 	ctx, cancel := context.WithCancel(context.Background())
 	insertChannel := make(chan *Sale, 10)
 	transChannel := make(chan *Sale, 10)
+	updateChannel := make(chan *Sale, 10)
 	delChannel := make(chan bool, 10)
 
 	r := rand.New(rand.NewSource(44))
@@ -88,6 +89,22 @@ func simpleProgram(secrets *binlog.Secrets) context.CancelFunc {
 				return
 			case <-time.After(dur):
 				insertChannel <- &Sale{
+					value:           r.Int63n(10000),
+					discountPercent: r.Int63n(3000),
+				}
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			dur := time.Duration(r.Int31n(2000)) * time.Millisecond
+			select {
+			case <-ctx.Done():
+				log.Info("context done")
+				return
+			case <-time.After(dur):
+				updateChannel <- &Sale{
 					value:           r.Int63n(10000),
 					discountPercent: r.Int63n(3000),
 				}
@@ -144,6 +161,13 @@ func simpleProgram(secrets *binlog.Secrets) context.CancelFunc {
 				} else {
 					log.WithField("type", "trans").Debug(s)
 				}
+			case s := <-updateChannel:
+				err := updater(ctx, conn, s)
+				if err != nil {
+					log.WithField("type", "update").WithError(err).Println("unable to trans-insert record")
+				} else {
+					log.WithField("type", "update").Debug(s)
+				}
 			case <-delChannel:
 				err := deleter(ctx, conn)
 				if err != nil {
@@ -170,6 +194,22 @@ func transInsert(ctx context.Context, conn *sql.DB, s *Sale) error {
 		START TRANSACTION;
 		SET @saleNum = (SELECT MAX(id)+1 FROM sales.sales);
 		INSERT INTO sales.sales(id, happened_at, currency, created_at, amount_displayed, discount_percent) VALUES(@saleNum, NOW(), 'CAD', NOW(), ?, ?);
+		COMMIT;
+	`
+	_, err := conn.ExecContext(ctx, query, s.value/100, s.discountPercent/100)
+	return err
+}
+
+func updater(ctx context.Context, conn *sql.DB, s *Sale) error {
+	query := `
+		START TRANSACTION;
+		SET @saleNum = (SELECT MAX(id)-2 FROM sales.sales);
+		UPDATE sales.sales SET
+		  currency = 'UPD',
+		  amount_displayed = ?,
+		  discount_percent = ?
+		WHERE 
+		  id = @saleNum;
 		COMMIT;
 	`
 	_, err := conn.ExecContext(ctx, query, s.value/100, s.discountPercent/100)
