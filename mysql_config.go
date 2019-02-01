@@ -107,7 +107,7 @@ func (m *MysqlConfig) GetSyncer() *replication.BinlogSyncer {
 	return replication.NewBinlogSyncer(cfg)
 }
 
-func (m *MysqlConfig) OpenCanal() context.Context {
+func (m *MysqlConfig) OpenCanal(handler EventHandler) context.Context {
 	cfg := canal.NewDefaultConfig()
 	cfg.Addr = fmt.Sprintf("%s:%d", m.Host, m.Port)
 	cfg.User = m.User
@@ -121,7 +121,7 @@ func (m *MysqlConfig) OpenCanal() context.Context {
 	if err != nil {
 		log.WithError(err).Panic(err, "Unable to start canal")
 	}
-	c.SetEventHandler(&loggerBlogEventHandler{})
+	c.SetEventHandler(handler)
 	c.Run()
 	return c.Ctx()
 }

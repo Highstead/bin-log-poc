@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		log.WithError(err).Panic("can't parse secrets file")
 	}
-	ctx := secrets.Master.OpenCanal()
+	ctx := secrets.Master.OpenCanal(binlog.NewLoggerEventHandler())
 	log.Info("Canal Open")
 
 	gracefulShutdown(ctx)

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
+	kafka "github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,9 +24,15 @@ type kafkaConfig struct {
 	ClientCert []byte `json:"client_cert"`
 }
 
+func (k *kafkaConfig) WriteConfiger(topic string) *kafka.WriterConfig {
+	return &kafka.WriterConfig{
+		Brokers: k.Brokers.Local,
+		Topic:   topic,
+	}
+}
+
 type Secrets struct {
-	Kafka    kafkaConfig `json:"_kafka"`
-	CloudAgg kafkaConfig
+	Kafka kafkaConfig `json:"_kafka"`
 
 	Zk struct {
 		// Nodes is the list of Zookeeper nodes to create the consumer group with.
@@ -75,14 +82,6 @@ func EnvironmentOverrides(secrets *Secrets) {
 	if brokers := os.Getenv("KAFKA"); brokers != "" {
 		secrets.Kafka.Brokers.Local = strings.Split(brokers, ",")
 		entry = entry.WithField("KAFKA", brokers)
-	}
-	if brokers := os.Getenv("KAFKA_CLOUD_AGGREGATE"); brokers != "" {
-		secrets.CloudAgg.Brokers.Aggregate = strings.Split(brokers, ",")
-		entry = entry.WithField("KAFKA_CLOUD_AGGREGATE", brokers)
-		key := os.Getenv("KAFKA_CLOUD_AGGREGATE_CLIENT_KEY")
-		cert := os.Getenv("KAFKA_CLOUD_AGGREGATE_CLIENT_CERT")
-		secrets.CloudAgg.ClientCert = []byte(cert)
-		secrets.CloudAgg.ClientKey = []byte(key)
 	}
 	if brokers := os.Getenv("KAFKA_AGGREGATE"); brokers != "" {
 		secrets.Kafka.Brokers.Aggregate = strings.Split(brokers, ",")
