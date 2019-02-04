@@ -21,14 +21,35 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
 
-  mysql:
-    build:
-      context: ./mysql
-      dockerfile: Dockerfile
-    container_name: blog_mysql
-    environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    volumes:
-      - /var/lib/mysql
+  mysqlmaster:
+    image: mysql:5.7.15
     ports:
       - "3306:3306"
+    environment:
+      - "MYSQL_ALLOW_EMPTY_PASSWORD=yes"
+    volumes:
+      - ./data/mysql-master:/var/lib/mysql/
+      - ./config/mysql-master:/etc/mysql/conf.d/
+    command: --server-id=1 --log-bin=mysql-bin --gtid-mode=ON --binlog-format=ROW --enforce-gtid-consistency --log-slave-updates
+  mysqlslave:
+    image: mysql:5.7
+    ports:
+      - "13306:3306"
+      - "33060:33060"
+    environment:
+      - "MYSQL_ROOT_PASSWORD=root"
+    volumes:
+      - ./data/mysql-slave:/var/lib/mysql/
+      - ./config/mysql-slave:/etc/mysql/conf.d/
+    command: --server-id=1 --log-bin=mysql-bin --gtid-mode=ON --binlog-format=ROW --enforce-gtid-consistency --log-slave-updates
+  mysqlconfigure:
+    image: mysql:5.7.15
+    environment:
+      - "MYSQL_SLAVE_PASSWORD=root"
+      - "MYSQL_MASTER_PASSWORD=root"
+      - "MYSQL_ROOT_PASSWORD=root"
+      - "MYSQL_REPLICATION_USER=repl"
+      - "MYSQL_REPLICATION_PASSWORD=repl"
+    volumes:
+      - ./config/mysql_connector.sh:/tmp/mysql_connector.sh
+    command: /bin/bash -x /tmp/mysql_connector.sh
