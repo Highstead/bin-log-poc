@@ -82,9 +82,10 @@ type kafkaBlogEventHandler struct {
 	sync   *sync.Mutex
 }
 
-func NewKafkaEventHandler(config kafka.WriterConfig) EventHandler {
+func NewKafkaEventHandler(config *kafka.WriterConfig) EventHandler {
 	return &kafkaBlogEventHandler{
-		writer: kafka.NewWriter(config),
+		writer: kafka.NewWriter(*config),
+		sync:   new(sync.Mutex),
 	}
 }
 
