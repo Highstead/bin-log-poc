@@ -82,7 +82,7 @@ type kafkaBlogEventHandler struct {
 	sync   *sync.Mutex
 }
 
-func NewKafkaEventHandler(config *kafka.WriterConfig) EventHandler {
+func NewKafkaEventHandler(config *kafka.WriterConfig) *kafkaBlogEventHandler {
 	return &kafkaBlogEventHandler{
 		writer: kafka.NewWriter(*config),
 		sync:   new(sync.Mutex),
@@ -91,6 +91,7 @@ func NewKafkaEventHandler(config *kafka.WriterConfig) EventHandler {
 
 func (k *kafkaBlogEventHandler) AutoEmit(ctx context.Context, wFreq time.Duration) {
 	go func() {
+		log.Println("Emitting events")
 		for {
 			select {
 			case <-time.After(wFreq):
@@ -104,6 +105,7 @@ func (k *kafkaBlogEventHandler) AutoEmit(ctx context.Context, wFreq time.Duratio
 }
 
 func (k *kafkaBlogEventHandler) WriteEvents(c context.Context) ([]kafka.Message, error) {
+	log.Println("Writing events", len(k.msgs))
 	ctx, cancel := context.WithTimeout(c, 10*time.Second)
 	defer cancel()
 	k.sync.Lock()

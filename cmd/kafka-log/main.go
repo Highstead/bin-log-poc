@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/Shopify/reportify-query/common"
 	"github.com/highstead/bin-log-poc"
+	kafka "github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,10 +39,8 @@ func main() {
 	if err != nil {
 		log.WithError(err).Panic("can't parse secrets file")
 	}
-	eh := binlog.NewKafkaEventHandler(secrets.Kafka.WriteConfiger("test"))
-	eh.AutoEmit(context.Background(), (time.Second))
-	ctx := secrets.Master.OpenCanal(eh)
-	log.Info("Canal Open")
+	ctx := context.Background()
+	kafkaToLog(ctx, secrets, "test")
 
 	gracefulShutdown(ctx)
 }
@@ -56,5 +54,22 @@ func gracefulShutdown(ctx context.Context) {
 		log.Info("Recieved stop signal")
 	case <-ctx.Done():
 		log.WithField("ctx", ctx.Err()).Info("Context closed")
+	}
+}
+
+func kafkaToLog(ctx context.Context, secrets *binlog.Secrets, topic string) {
+	rcfg := *secrets.Kafka.ReadConfiger(topic, 0)
+	r := kafka.NewReader(rcfg)
+	defer r.Close()
+	//r.SetOffset(kafka.LastOffset)
+	r.SetOffset(kafka.FirstOffset)
+
+	for {
+		m, err := r.ReadMessage(context.Background())
+		if err != nil {
+			log.WithError(err).Println("unable to read kafka message")
+			break
+		}
+		log.WithField("msg", m.Value).Printf("off:%v, key: %v ", m.Offset, m.Key)
 	}
 }

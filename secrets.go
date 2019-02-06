@@ -31,6 +31,17 @@ func (k *kafkaConfig) WriteConfiger(topic string) *kafka.WriterConfig {
 	}
 }
 
+func (k *kafkaConfig) ReadConfiger(topic string, partition int) *kafka.ReaderConfig {
+	r := &kafka.ReaderConfig{
+		Brokers:   k.Brokers.Local,
+		Topic:     topic,
+		Partition: partition,
+		MinBytes:  10e3, //10KiB
+		MaxBytes:  10e6, //10MiB
+	}
+	return r
+}
+
 type Secrets struct {
 	Kafka kafkaConfig `json:"_kafka"`
 

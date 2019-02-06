@@ -8,16 +8,17 @@ services:
       - "2181:2181"
 
   kafka:
-    image: wurstmeister/kafka:0.9.0.1
+    image: wurstmeister/kafka:2.11-1.0.2
     container_name: blog_kafka
     ports:
       - "9092:9092"
     links:
       - zookeeper:zookeeper
     environment:
+      HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
       KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
       KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_CREATE_TOPICS: "reportify.storefront.pageviews:8:1,reportify.storefront.checkouts:8:1,test_source:8:1,test_sink:8:1"
+      KAFKA_CREATE_TOPICS: "test:1:1"
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
 
