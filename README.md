@@ -4,7 +4,6 @@ This is a bin log proof of concept i'm working on to nicely get bin-logs into ka
 ##Todo
 - Productionize siddontang/go-mysql to allow for a different logger
 - Verify I can nicely restart the binlogger 
-- Put data into Kafka
-  -  It is expected that because kafka is gauranteed delivery but not gaurnteed once that some de-duping will need to occur
+- Look at batch inserts/deletes/updates
 
 
